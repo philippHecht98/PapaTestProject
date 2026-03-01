@@ -1,0 +1,11 @@
+{
+    "server": {
+        "port": 8080,
+        "host": "0.0.0.0"
+    },
+    "paths": {
+        "templates": "./templates",
+        "temp": "./temp",
+        "libreOffice": "C:\\Program Files\\LibreOffice\\program\\soffice.exe"
+    }
+}

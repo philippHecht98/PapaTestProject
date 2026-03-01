@@ -1,0 +1,54 @@
+# =============================================================================
+# docker-compose.yml — ReportServer test environment
+#
+# Usage:
+#   Build and start:   docker compose -f docker/docker-compose.yml up --build
+#   Stop:              docker compose -f docker/docker-compose.yml down
+#   View logs:         docker compose -f docker/docker-compose.yml logs -f
+#
+# The Dockerfile is expected to be built from the repository root as context
+# (see the `build.context` setting below), which lets it access all project
+# files including the src/ directory.
+# =============================================================================
+
+services:
+
+  reportserver:
+    build:
+      # Build context is the repository root so the Dockerfile can access
+      # src/, templates/, and docker/ during the build.
+      context: ..
+      dockerfile: docker/Dockerfile
+
+    # Map host port 8080 to container port 8080.
+    # Change the left side to use a different port on your machine,
+    # e.g. "9090:8080" if port 8080 is already taken.
+    ports:
+      - "8080:8080"
+
+    volumes:
+      # Mount the local templates/ folder into the container.
+      # This means you can add or edit .docx template files on your host
+      # and the server will pick them up immediately — without rebuilding
+      # the Docker image.
+      - ../templates:/app/templates
+
+    # Restart the container automatically if it crashes or the host reboots.
+    # Set to "no" if you only want it to run when you start it manually.
+    restart: unless-stopped
+
+    # Make logs easier to read by adding a timestamp to each line
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Basic health check: polls the /api/templates endpoint every 30 seconds.
+    # If the server fails to respond 3 times in a row, Docker marks it unhealthy.
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/templates"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s  # Give the server time to start before first check
